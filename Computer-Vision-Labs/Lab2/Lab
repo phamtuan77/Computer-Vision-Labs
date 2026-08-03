@@ -1,0 +1,178 @@
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+
+img = cv2.imread("picture1.jpg")
+
+if img is None:
+    print("Không tìm thấy ảnh!")
+    exit()
+
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+# I.1 Thay đổi độ sáng
+brightness = np.clip(img.astype(np.int16) + 50, 0, 255).astype(np.uint8)
+
+# I.2 Thay đổi độ tương phản
+contrast = np.clip(img.astype(np.float32) * 1.5, 0, 255).astype(np.uint8)
+
+# I.3 Biến đổi âm bản
+negative = 255 - img
+
+# I.4 Cắt ngưỡng
+_, threshold = cv2.threshold(gray, 127, 255, cv2.THRESH_BINARY)
+
+# II.1 Lọc trung bình
+average = cv2.blur(img, (5, 5))
+
+# II.2 Lọc Gaussian
+gaussian = cv2.GaussianBlur(img, (5, 5), 0)
+
+# II.3 Làm sắc nét
+kernel_sharpen = np.array([
+    [0, -1, 0],
+    [-1, 5, -1],
+    [0, -1, 0]
+])
+
+sharpen = cv2.filter2D(img, -1, kernel_sharpen)
+
+# III.1 Sobel
+sobelx = cv2.Sobel(gray, cv2.CV_64F, 1, 0, ksize=3)
+sobely = cv2.Sobel(gray, cv2.CV_64F, 0, 1, ksize=3)
+sobel = cv2.convertScaleAbs(cv2.magnitude(sobelx, sobely))
+
+# III.1 Prewitt
+kernelx = np.array([
+    [-1, 0, 1],
+    [-1, 0, 1],
+    [-1, 0, 1]
+])
+
+kernely = np.array([
+    [-1, -1, -1],
+    [0, 0, 0],
+    [1, 1, 1]
+])
+
+prewittx = cv2.filter2D(gray, -1, kernelx)
+prewitty = cv2.filter2D(gray, -1, kernely)
+
+prewitt = cv2.addWeighted(
+    cv2.convertScaleAbs(prewittx),
+    0.5,
+    cv2.convertScaleAbs(prewitty),
+    0.5,
+    0
+)
+
+# III.2 Kernel tự thiết kế
+kernel_custom = np.array([
+    [-2, -1, 0],
+    [-1, 1, 1],
+    [0, 1, 2]
+])
+
+custom = cv2.filter2D(img, -1, kernel_custom)
+
+# III.4 Median Filter
+median = cv2.medianBlur(img, 5)
+
+# III.4 Bilateral Filter
+bilateral = cv2.bilateralFilter(img, 9, 75, 75)
+
+# III.3 So sánh các loại lọc
+compare = [
+    ("Average", average),
+    ("Gaussian", gaussian),
+    ("Median", median),
+    ("Bilateral", bilateral)
+]
+
+plt.figure("I. Toán tử điểm ảnh", figsize=(12, 8))
+
+plt.subplot(2, 3, 1)
+plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+plt.title("Original")
+plt.axis("off")
+
+plt.subplot(2, 3, 2)
+plt.imshow(cv2.cvtColor(brightness, cv2.COLOR_BGR2RGB))
+plt.title("Brightness")
+plt.axis("off")
+
+plt.subplot(2, 3, 3)
+plt.imshow(cv2.cvtColor(contrast, cv2.COLOR_BGR2RGB))
+plt.title("Contrast")
+plt.axis("off")
+
+plt.subplot(2, 3, 4)
+plt.imshow(cv2.cvtColor(negative, cv2.COLOR_BGR2RGB))
+plt.title("Negative")
+plt.axis("off")
+
+plt.subplot(2, 3, 5)
+plt.imshow(threshold, cmap="gray")
+plt.title("Threshold")
+plt.axis("off")
+
+plt.tight_layout()
+
+plt.figure("II. Lọc tuyến tính", figsize=(10, 8))
+
+plt.subplot(2, 2, 1)
+plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+plt.title("Original")
+plt.axis("off")
+
+plt.subplot(2, 2, 2)
+plt.imshow(cv2.cvtColor(average, cv2.COLOR_BGR2RGB))
+plt.title("Average")
+plt.axis("off")
+
+plt.subplot(2, 2, 3)
+plt.imshow(cv2.cvtColor(gaussian, cv2.COLOR_BGR2RGB))
+plt.title("Gaussian")
+plt.axis("off")
+
+plt.subplot(2, 2, 4)
+plt.imshow(cv2.cvtColor(sharpen, cv2.COLOR_BGR2RGB))
+plt.title("Sharpen")
+plt.axis("off")
+
+plt.tight_layout()
+
+plt.figure("III. Bài tập nâng cao", figsize=(16,10))
+
+plt.subplot(2,3,1)
+plt.imshow(cv2.cvtColor(img,cv2.COLOR_BGR2RGB))
+plt.title("Original")
+plt.axis("off")
+
+plt.subplot(2,3,2)
+plt.imshow(sobel,cmap="gray")
+plt.title("Sobel")
+plt.axis("off")
+
+plt.subplot(2,3,3)
+plt.imshow(prewitt,cmap="gray")
+plt.title("Prewitt")
+plt.axis("off")
+
+plt.subplot(2,3,4)
+plt.imshow(cv2.cvtColor(custom,cv2.COLOR_BGR2RGB))
+plt.title("Custom Kernel")
+plt.axis("off")
+
+plt.subplot(2,3,5)
+plt.imshow(cv2.cvtColor(median,cv2.COLOR_BGR2RGB))
+plt.title("Median")
+plt.axis("off")
+
+plt.subplot(2,3,6)
+plt.imshow(cv2.cvtColor(bilateral,cv2.COLOR_BGR2RGB))
+plt.title("Bilateral")
+plt.axis("off")
+
+plt.tight_layout(pad=3)
+plt.show()
