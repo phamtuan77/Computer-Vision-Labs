@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-img = cv2.imread("picture1.jpg")
+img = cv2.imread("vanmieu.jpg")
 
 if img is None:
     print("Không tìm thấy ảnh!")
